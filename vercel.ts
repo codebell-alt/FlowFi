@@ -1,16 +1,8 @@
-import { build } from 'vercel/build';
-
-export const version = 3;
-
-export const buildCommand = {
-  cmd: 'pnpm build',
-  cwd: 'Frontend'
+export default {
+  framework: 'nextjs',
+  buildCommand: 'cd Frontend && pnpm build',
+  devCommand: 'cd Frontend && pnpm dev',
+  installCommand: 'cd Frontend && pnpm install',
+  outputDirectory: 'Frontend/.next',
+  nodeVersion: '20.x'
 };
-
-export const devCommand = {
-  cwd: 'Frontend'
-};
-
-export const outputDirectory = 'Frontend/.next';
-
-export const framework = 'nextjs';
