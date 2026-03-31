@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd Frontend && npm run build || cd ../Frontend && pnpm build",
+  "devCommand": "cd Frontend && npm run dev || cd ../Frontend && pnpm dev",
+  "installCommand": "cd Frontend && npm install || cd ../Frontend && pnpm install",
+  "framework": "nextjs",
+  "nodeVersion": "18.x",
+  "regions": ["sfo1"]
+}
