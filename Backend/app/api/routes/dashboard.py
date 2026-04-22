@@ -223,3 +223,55 @@ async def get_monthly_comparison(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al obtener comparación mensual: {str(e)}"
         )
+
+
+@router.get("/transactions", response_model=dict)
+async def get_transactions_unified(
+    desde: Optional[str] = Query(None, description="Fecha inicio (YYYY-MM-DD)"),
+    hasta: Optional[str] = Query(None, description="Fecha fin (YYYY-MM-DD)"),
+):
+    """
+    Obtiene GASTOS + INGRESOS en UNA sola llamada para optimizar reportes.
+    
+    Retorna ambas listas juntas en una sola respuesta.
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        # Definir rango de fechas
+        end_date = parse_date(hasta) or date.today()
+        start_date = parse_date(desde) or (end_date - timedelta(days=30))
+        
+        # Obtener GASTOS
+        expenses_response = supabase.client.table("expenses").select(
+            "id, date, amount, description, expense_categories(id, name)"
+        ).gte("date", start_date.isoformat()).lte(
+            "date", end_date.isoformat()
+        ).order("date").execute()
+        
+        expenses = expenses_response.data or []
+        
+        # Obtener INGRESOS
+        incomes_response = supabase.client.table("incomes").select(
+            "id, date, amount, description, payment_method, income_types(id, name)"
+        ).gte("date", start_date.isoformat()).lte(
+            "date", end_date.isoformat()
+        ).order("date").execute()
+        
+        incomes = incomes_response.data or []
+        
+        return {
+            "expenses": expenses,
+            "incomes": incomes,
+            "period": {
+                "start": start_date.isoformat(),
+                "end": end_date.isoformat(),
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching unified transactions: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener transacciones: {str(e)}"
+        )
