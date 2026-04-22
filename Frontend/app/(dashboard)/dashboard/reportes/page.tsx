@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,8 +17,8 @@ const DetailedReport = dynamic(
 export default function ReportesPage() {
   const searchParams = useSearchParams()
   
-  // Inicializar con valores por defecto (últimos 30 días)
-  const getDefaultDates = () => {
+  // Memoizar cálculo de fechas por defecto
+  const defaults = useMemo(() => {
     const end = new Date()
     const start = new Date()
     start.setDate(start.getDate() - 30)
@@ -26,9 +26,8 @@ export default function ReportesPage() {
       start: start.toISOString().split('T')[0],
       end: end.toISOString().split('T')[0]
     }
-  }
+  }, [])
 
-  const defaults = getDefaultDates()
   const [startDate, setStartDate] = useState(defaults.start)
   const [endDate, setEndDate] = useState(defaults.end)
 
@@ -43,10 +42,10 @@ export default function ReportesPage() {
     }
   }, [searchParams])
 
-  const handleDateChange = (start: string, end: string) => {
+  const handleDateChange = useCallback((start: string, end: string) => {
     setStartDate(start)
     setEndDate(end)
-  }
+  }, [])
 
   return (
     <div className="space-y-6">
