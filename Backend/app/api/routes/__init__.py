@@ -5,6 +5,8 @@ from . import expenses
 from . import categories
 from . import dashboard
 from . import admin
+from . import export
+from . import debug
 
 __all__ = [
     "auth",
@@ -14,4 +16,6 @@ __all__ = [
     "categories",
     "dashboard",
     "admin",
+    "export",
+    "debug",
 ]

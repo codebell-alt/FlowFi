@@ -15,6 +15,8 @@ from app.api.routes import (
     profile,
     auth,
     admin,
+    export,
+    debug,
 )
 
 # Configura logging
@@ -88,6 +90,8 @@ def create_app() -> FastAPI:
     app.include_router(categories.router)
     app.include_router(dashboard.router)
     app.include_router(admin.router)
+    app.include_router(export.router)
+    app.include_router(debug.router)
 
     # Error handlers
     @app.exception_handler(Exception)

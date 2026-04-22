@@ -2,8 +2,12 @@
 Configuración de la aplicación FlowFi Backend
 """
 import os
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import Optional
+
+# Cargar variables de entorno antes de usarlas
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -22,13 +26,11 @@ class Settings(BaseSettings):
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
     SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     
-    # CORS configuration
-    CORS_ORIGINS: list = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-    ]
+    # CORS configuration - Configurable via environment variables
+    @property
+    def CORS_ORIGINS(self) -> list:
+        allowed = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000").split(",")
+        return [origin.strip() for origin in allowed]
     
     # JWT configuration (if needed)
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")

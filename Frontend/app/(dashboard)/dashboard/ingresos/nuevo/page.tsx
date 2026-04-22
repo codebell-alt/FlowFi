@@ -15,11 +15,16 @@ export default async function NewIncomePage() {
     redirect('/auth/login')
   }
 
-  const { data: incomeTypes } = await supabase
+  const { data: allIncomeTypes } = await supabase
     .from('income_types')
     .select('*')
     .or(`user_id.eq.${user.id},is_default.eq.true`)
     .order('name')
+
+  // Eliminar duplicados por nombre
+  const incomeTypes = Array.from(
+    new Map(allIncomeTypes?.map((item) => [item.name, item]) || []).values()
+  )
 
   return (
     <div className="space-y-6">

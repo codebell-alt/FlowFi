@@ -6,10 +6,46 @@ from fastapi.security import HTTPBearer
 from app.database import get_supabase_client
 from typing import Optional
 import logging
+import jwt
+import os
 
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
+
+
+def extract_user_id_from_token(authorization_header: Optional[str]) -> Optional[str]:
+    """
+    Extrae el user_id del JWT token sin validar la firma (solo para desarrollo).
+    Intenta primero decodificar con la clave de Supabase, y si falla, lo hace sin validación.
+    
+    Args:
+        authorization_header: Header Authorization (ej: "Bearer token...")
+        
+    Returns:
+        user_id extraído del token, o None si no hay token
+    """
+    if not authorization_header:
+        return None
+    
+    try:
+        # Remover "Bearer " del header
+        token = authorization_header.replace("Bearer ", "").strip()
+        
+        # Intenta decodificar sin validar firma (útil para desarrollo)
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        
+        # El user_id está en el claim 'sub'
+        user_id = decoded.get("sub")
+        
+        if user_id:
+            logger.info(f"User ID extracted from JWT: {user_id}")
+            return user_id
+            
+    except Exception as e:
+        logger.warning(f"Could not extract user_id from token: {str(e)}")
+    
+    return None
 
 
 async def get_current_user(credentials) -> dict:

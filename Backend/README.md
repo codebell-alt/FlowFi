@@ -76,6 +76,15 @@ O directamente con uvicorn:
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 1 - Backend
+cd Backend
+.\venv\Scripts\Activate.ps1
+python run.py
+
+# Terminal 2 - Frontend
+cd Frontend
+pnpm dev
 ```
 
 El servidor estará disponible en: http://localhost:8000

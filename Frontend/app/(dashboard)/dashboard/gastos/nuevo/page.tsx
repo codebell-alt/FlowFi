@@ -15,11 +15,16 @@ export default async function NewExpensePage() {
     redirect('/auth/login')
   }
 
-  const { data: categories } = await supabase
+  const { data: allCategories } = await supabase
     .from('expense_categories')
     .select('*')
     .or(`user_id.eq.${user.id},is_default.eq.true`)
     .order('name')
+
+  // Eliminar duplicados por nombre
+  const categories = Array.from(
+    new Map(allCategories?.map((item) => [item.name, item]) || []).values()
+  )
 
   return (
     <div className="space-y-6">

@@ -11,6 +11,7 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Wallet,
+  BarChart3,
   Users,
   Settings,
   ChevronLeft,
@@ -22,6 +23,8 @@ import { useState } from 'react'
 interface DashboardSidebarProps {
   user: User
   profile: Profile | null
+  displayName?: string
+  businessName?: string
 }
 
 const navigation = [
@@ -29,6 +32,7 @@ const navigation = [
   { name: 'Ingresos', href: '/dashboard/ingresos', icon: ArrowUpCircle },
   { name: 'Gastos', href: '/dashboard/gastos', icon: ArrowDownCircle },
   { name: 'Control de Caja', href: '/dashboard/caja', icon: Wallet },
+  { name: 'Reportes', href: '/dashboard/reportes', icon: BarChart3 },
 ]
 
 const adminNavigation = [
@@ -36,10 +40,12 @@ const adminNavigation = [
   { name: 'Configuración', href: '/dashboard/configuracion', icon: Settings },
 ]
 
-export function DashboardSidebar({ profile }: DashboardSidebarProps) {
+export function DashboardSidebar({ user, profile, displayName, businessName }: DashboardSidebarProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const isAdmin = profile?.role === 'admin'
+  
+  const userEmail = profile?.email || user?.email
 
   return (
     <>
@@ -151,19 +157,27 @@ export function DashboardSidebar({ profile }: DashboardSidebarProps) {
 
         {/* User info */}
         <div className="border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
-              {profile?.full_name?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || 'U'}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground flex-shrink-0">
+              {displayName?.[0]?.toUpperCase() || 'U'}
             </div>
-            <div className="flex-1 truncate">
-              <p className="text-sm font-medium truncate">
-                {profile?.full_name || 'Usuario'}
+            <div className="flex-1 truncate min-w-0">
+              <p className="text-sm font-semibold truncate text-sidebar-foreground">
+                {displayName}
               </p>
               <p className="text-xs text-sidebar-foreground/60 truncate">
-                {profile?.email}
+                {userEmail}
               </p>
             </div>
           </div>
+          {businessName && (
+            <div className="bg-sidebar-accent/40 rounded px-3 py-2">
+              <p className="text-xs font-medium text-sidebar-foreground/70 mb-1">Negocio</p>
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {businessName}
+              </p>
+            </div>
+          )}
         </div>
       </aside>
     </>

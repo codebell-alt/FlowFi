@@ -87,7 +87,7 @@ class IncomeTypeResponse(IncomeTypeBase):
 # ============================================================================
 class IncomeBase(BaseModel):
     """Base de ingreso"""
-    amount: float = Field(..., gt=0, decimal_places=2)
+    amount: float = Field(..., gt=0)
     payment_method: PaymentMethodEnum
     date: date
     description: Optional[str] = None
@@ -160,7 +160,7 @@ class ExpenseCategoryResponse(ExpenseCategoryBase):
 # ============================================================================
 class ExpenseBase(BaseModel):
     """Base de gasto"""
-    amount: float = Field(..., gt=0, decimal_places=2)
+    amount: float = Field(..., gt=0)
     date: date
     description: Optional[str] = None
     category_id: Optional[str] = None

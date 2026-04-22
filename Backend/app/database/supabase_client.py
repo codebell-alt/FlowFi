@@ -12,10 +12,12 @@ logger = logging.getLogger(__name__)
 class SupabaseClient:
     """
     Cliente wrapper para Supabase que maneja la conexión y operaciones CRUD.
+    Soporta tanto cliente anon (con RLS) como service-role (bypass RLS).
     """
 
     _instance: Optional["SupabaseClient"] = None
     _client: Optional[Client] = None
+    _service_role_client: Optional[Client] = None
 
     def __new__(cls):
         """Singleton pattern para la conexión a Supabase"""
@@ -32,21 +34,41 @@ class SupabaseClient:
                     "SUPABASE_URL and SUPABASE_KEY must be set in environment variables"
                 )
 
+            # Cliente normal (con RLS)
             self._client = create_client(
                 supabase_url=settings.SUPABASE_URL,
                 supabase_key=settings.SUPABASE_KEY,
             )
             logger.info("Supabase client initialized successfully")
+            
+            # Cliente con Service Role Key (bypass RLS) - si está disponible
+            if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_SERVICE_ROLE_KEY != "sb_publishable_v9xjom8ox56sgelUBuYICw_BV3JAT39":
+                try:
+                    self._service_role_client = create_client(
+                        supabase_url=settings.SUPABASE_URL,
+                        supabase_key=settings.SUPABASE_SERVICE_ROLE_KEY,
+                    )
+                    logger.info("Service Role client initialized (for RLS bypass)")
+                except Exception as e:
+                    logger.warning(f"Could not initialize service role client: {str(e)}")
         except Exception as e:
             logger.error(f"Failed to initialize Supabase client: {str(e)}")
             raise
 
     @property
     def client(self) -> Client:
-        """Retorna el cliente de Supabase"""
+        """Retorna el cliente de Supabase normal (con RLS)"""
         if self._client is None:
             self._initialize()
         return self._client
+    
+    @property
+    def service_role_client(self) -> Client:
+        """Retorna el cliente con Service Role (bypass RLS)"""
+        if self._service_role_client is None:
+            # Si no está disponible, usar el cliente normal
+            return self.client
+        return self._service_role_client
 
     def get_auth_header(self, token: str) -> Dict[str, str]:
         """Retorna el header de autenticación para llamadas al servidor"""
@@ -54,6 +76,61 @@ class SupabaseClient:
             "Authorization": f"Bearer {token}",
             "apikey": settings.SUPABASE_KEY,
         }
+
+    async def query_authenticated(self, token: str, table: str, query_params: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Ejecuta una query directa contra la API PostgREST de Supabase con JWT token.
+        CRÍTICO: El JWT debe estar en el header para que RLS valide auth.uid().
+        
+        Args:
+            token: JWT token del usuario
+            table: Nombre de la tabla
+            query_params: Parámetros de query (ej: {'select': '*', 'user_id': 'eq.xxx'})
+            
+        Returns:
+            Resultado de la query como dict
+        """
+        try:
+            import httpx
+            import json as json_lib
+            
+            # URL del endpoint PostgREST
+            url = f"{settings.SUPABASE_URL}/rest/v1/{table}"
+            
+            # Headers con el JWT - ESTO ES CRÍTICO
+            headers = self.get_auth_header(token)
+            headers["Content-Type"] = "application/json"
+            
+            logger.info(f"Making authenticated request to {url}")
+            logger.debug(f"Query params: {query_params}")
+            logger.debug(f"Headers: Authorization={headers['Authorization'][:30]}..., apikey={headers['apikey'][:20]}...")
+            
+            # Usar httpx para hacer la petición
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=query_params, headers=headers)
+                
+                logger.info(f"PostgREST Response: {response.status_code}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.info(f"Retrieved {len(data) if isinstance(data, list) else 'unknown'} items from {table}")
+                    return {
+                        "data": data,
+                        "count": len(data) if isinstance(data, list) else 0,
+                    }
+                else:
+                    logger.error(f"PostgREST error: {response.status_code} - {response.text}")
+                    return {
+                        "data": [],
+                        "count": 0,
+                    }
+                    
+        except Exception as e:
+            logger.error(f"Error making authenticated query: {str(e)}")
+            return {
+                "data": [],
+                "count": 0,
+            }
 
     async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """

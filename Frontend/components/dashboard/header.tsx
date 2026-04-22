@@ -18,9 +18,11 @@ import { LogOut, User as UserIcon, Settings } from 'lucide-react'
 interface DashboardHeaderProps {
   user: User
   profile: Profile | null
+  displayName?: string
+  businessName?: string
 }
 
-export function DashboardHeader({ profile }: DashboardHeaderProps) {
+export function DashboardHeader({ user, profile, displayName, businessName }: DashboardHeaderProps) {
   const router = useRouter()
 
   const handleSignOut = async () => {
@@ -43,18 +45,25 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
-              {profile?.full_name?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || 'U'}
+              {(displayName || profile?.email || user?.email)?.[0]?.toUpperCase() || 'U'}
             </div>
-            <span className="hidden sm:inline-block max-w-32 truncate">
-              {profile?.full_name || 'Usuario'}
+            <span className="hidden sm:inline-block max-w-32 truncate text-sm">
+              {displayName && displayName.split(' ')[0]}
             </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium">{profile?.full_name || 'Usuario'}</p>
-              <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+            <div className="flex flex-col space-y-2">
+              <div>
+                <p className="text-sm font-semibold text-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground truncate mt-1">{profile?.email || user?.email}</p>
+              </div>
+              {(businessName) && (
+                <div className="pt-2 border-t text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground">{businessName}</p>
+                </div>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
