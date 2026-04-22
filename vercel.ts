@@ -1,7 +1,7 @@
 export default {
   framework: 'nextjs',
-  buildCommand: 'cd Frontend && npm run build',
-  devCommand: 'cd Frontend && npm run dev',
-  installCommand: 'cd Frontend && npm install',
+  buildCommand: 'cd Frontend && pnpm build',
+  devCommand: 'cd Frontend && pnpm dev',
+  installCommand: 'cd Frontend && pnpm install',
   outputDirectory: 'Frontend/.next'
 };
